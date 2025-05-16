@@ -1,0 +1,45 @@
+CREATE TABLE `rakamin-kf-analytics-459609.kimia_farma.tabel_analisa_kimiafarma` AS
+SELECT
+  tabelft.transaction_id,
+  tabelft.date,
+  tabelft.branch_id,
+  tabelkc.branch_name,
+  tabelkc.kota,
+  tabelkc.provinsi,
+  tabelkc.rating AS rating_cabang,
+  tabelft.customer_name,
+  tabelft.product_id,
+  tabelkp.product_name,
+  tabelkp.price AS actual_price,
+  tabelft.discount_percentage,
+    CASE
+      WHEN tabelft.price <= 50000 THEN 0.1
+      WHEN tabelft.price > 50000 AND tabelft.price <= 100000 THEN 0.15
+      WHEN tabelft.price > 100000 AND tabelft.price <= 300000 THEN 0.2
+      WHEN tabelft.price > 300000 AND tabelft.price <= 500000 THEN 0.25
+      WHEN tabelft.price > 500000 THEN 0.30
+      ELSE 0.3
+      END AS persentase_gross_laba, 
+        /*mencari nett sales*/
+        tabelft.price * (1 - tabelft.discount_percentage/100) AS nett_sales,
+        /*mencari nett profit*/
+        tabelft.price * (1 - tabelft.discount_percentage/100) *
+    CASE
+      WHEN tabelft.price <= 50000 THEN 0.1
+      WHEN tabelft.price > 50000 AND tabelft.price <= 100000 THEN 0.15
+      WHEN tabelft.price > 100000 AND tabelft.price <= 300000 THEN 0.2
+      WHEN tabelft.price > 300000 AND tabelft.price <= 500000 THEN 0.25
+      WHEN tabelft.price > 500000 THEN 0.30
+      ELSE 0.3
+      END AS nett_profit,
+      tabelft.rating AS rating_transaksi 
+FROM 
+  `kimia_farma.kf_final_transaction` AS tabelft
+JOIN
+  `rakamin-kf-analytics-459609.kimia_farma.kf_kantor_cabang` AS tabelkc
+ON
+  tabelft.branch_id = tabelkc.branch_id
+JOIN
+  `rakamin-kf-analytics-459609.kimia_farma.kf_product` AS tabelkp
+ON
+  tabelft.product_id = tabelkp.product_id;
